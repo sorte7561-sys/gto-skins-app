@@ -1,0 +1,44 @@
+name: Gerar APK GTO Skins
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "GTO_Skins_Android_Projeto.zip"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Extrair projeto Android
+        run: |
+          mkdir android-project
+          unzip -q GTO_Skins_Android_Projeto.zip -d android-project
+          echo "Arquivos extraídos:"
+          find android-project -maxdepth 2 -type f | head -50
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Compilar APK
+        working-directory: android-project/GTO_Skins_Android
+        run: gradle assembleDebug --stacktrace
+
+      - name: Salvar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTO-Skins-APK
+          path: android-project/GTO_Skins_Android/app/build/outputs/apk/debug/*.apk
